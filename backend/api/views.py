@@ -1,25 +1,61 @@
-from rest_framework import viewsets
-from .models import User, Halls, Foods, Booked, Goods, Services, SMS, Cart, CartFood, CartService, CartGoods
+
+from .models import (User, Halls, Foods, Booked, Goods, 
+Services, SMS, Cart, CartFood, CartService, CartGoods,WebAppData)
 from .serializers import (
     UserSerializer, HallsSerializer, FoodsSerializer, BookedSerializer,
     ServicesSerializer, GoodsSerializer, CartSerializer,
-    CartFoodSerializer, CartServiceSerializer, CartGoodsSerializer,SMSSerializer
+    CartFoodSerializer, CartServiceSerializer, CartGoodsSerializer,SMSSerializer, WebAppDataSerializer
 )
 import requests
 import random
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.utils import timezone
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
+    @action(detail=False, methods=['get'])
+    def get_datetime(self, request):
+        # Получаем текущие дату и время
+        current_datetime = timezone.now()
+        return Response({'datetime': current_datetime})
+
+    @action(detail=False, methods=['get'])
+    def get_by_tg_id(self, request):
+        tg_id = request.query_params.get('tg_id')
+        if not tg_id:
+            return Response({'error': 'tg_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(tg_id=tg_id)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = self.get_serializer(user)
+        return Response(serializer.data)
+        
 
 class HallsViewSet(viewsets.ModelViewSet):
     queryset = Halls.objects.all()
     serializer_class = HallsSerializer
 
+    @action(detail=False, methods=['get'])
+    def get_by_name(self, request):
+        name = request.query_params.get('name')
+        if not name:
+            return Response({'error': 'Name is required'}, status=status.HTTP_400_BAD_REQUEST)
 
+        try:
+            hall = Halls.objects.get(name=name)
+        except Halls.DoesNotExist:
+            return Response({'error': 'Hall not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = self.get_serializer(hall)
+        return Response(serializer.data)
+        
 class FoodsViewSet(viewsets.ModelViewSet):
     queryset = Foods.objects.all()
     serializer_class = FoodsSerializer
@@ -38,6 +74,10 @@ class GoodsViewSet(viewsets.ModelViewSet):
 class ServicesViewSet(viewsets.ModelViewSet):
     queryset = Services.objects.all()
     serializer_class = ServicesSerializer
+
+class WebAppDataViewSet(viewsets.ModelViewSet):
+    queryset = WebAppData.objects.all()
+    serializer_class = WebAppDataSerializer
 
 
 class SMSViewSet(viewsets.ModelViewSet):

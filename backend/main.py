@@ -13,6 +13,8 @@ from aiogram.types import BotCommandScopeAllPrivateChats
 from aiogram.client.bot import DefaultBotProperties
 from aiogram.enums import ParseMode
 from api.tg_bot.track_orders import notify_user
+from api.tg_bot.track_orders import getwebdata
+
 
 
 
@@ -41,6 +43,15 @@ async def start_tracking_orders():
         except Exception as err:
             print(f"{type(err)} - {err}")
 
+async def start_tracking_webapp():
+
+
+    while True:
+        await asyncio.sleep(1)
+        try:
+            await getwebdata(bot)
+        except Exception as err:
+            print(f"{type(err)} - {err}")
 
 def finish_all_tasks(tasks):
     for task in tasks:
@@ -53,6 +64,8 @@ async def main():
     tasks = [
         asyncio.create_task(start_bot()),
         asyncio.create_task(start_tracking_orders()),
+        asyncio.create_task(start_tracking_webapp()),
+
     ]
 
     tasks[0].add_done_callback(lambda x: finish_all_tasks(tasks))

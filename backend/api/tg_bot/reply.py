@@ -43,6 +43,12 @@ photo_menu = ReplyKeyboardMarkup(
     resize_keyboard=True
 )
 
+def start_inline() -> InlineKeyboardMarkup:
+    keyboard = InlineKeyboardBuilder()
+
+    keyboard.button(text=f'👉 Начать', web_app=WebAppInfo(text='Начать',url='https://pizzafresca.ru'))
+
+    return keyboard.adjust(1).as_markup()
 
 start_menu = ReplyKeyboardMarkup(
     keyboard=[
@@ -66,24 +72,14 @@ start_menu_for_reg = ReplyKeyboardMarkup(
 
 
 
-def check_order() -> ReplyKeyboardMarkup:
-    keyboard = ReplyKeyboardBuilder()
 
-    keyboard.button(text='Оплатить')
-    keyboard.button(text='Отмена')
 
-    return keyboard.as_markup(resize_keyboard=True, one_time_keyboard=True)
+def check_order(data_id) -> InlineKeyboardMarkup:
+    keyboard = InlineKeyboardBuilder()
 
-def check_order() -> ReplyKeyboardMarkup:
-    add_categories = ReplyKeyboardBuilder()
-
-    keyboard.button(text='Еда')
-    keyboard.button(text='Услуги')
-    keyboard.button(text='Товары')
-    keyboard.button(text=' ↩️ Выйти')
-
-    return keyboard.as_markup(resize_keyboard=True, one_time_keyboard=True)
-
+    keyboard.button(text='Оплатить', callback_data=f'pay_{data_id}')
+    keyboard.button(text='Отмена', callback_data='cancel_payment')
+    return keyboard.adjust(1).as_markup()
 
 
 def add_categories() -> InlineKeyboardMarkup:
@@ -99,11 +95,10 @@ def add_categories() -> InlineKeyboardMarkup:
 def delete_categories() -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardBuilder()
 
-    keyboard.button(text='Пиццы', callback_data='delete_pizza')
-    keyboard.button(text='Десерты', callback_data='delete_desserts')
-    keyboard.button(text='Салаты', callback_data='delete_salads')
-    keyboard.button(text='Супы', callback_data='delete_soups')
-    keyboard.button(text='Напитки', callback_data='delete_Drinks')
+    keyboard.button(text='Еда', callback_data='delete_foods')
+    keyboard.button(text='Услуги', callback_data='delete_services')
+    keyboard.button(text='Товары', callback_data='delete_goods')
+    keyboard.button(text='Залы', callback_data='delete_halls')
     keyboard.button(text='Выйти', callback_data='delete_come_out')
     return keyboard.adjust(2).as_markup()
 

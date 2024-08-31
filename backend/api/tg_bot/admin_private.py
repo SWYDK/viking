@@ -14,7 +14,7 @@ from api.tg_bot.database import *
 from api.tg_bot.classes_functions import Admin
 import api.tg_bot.reply as kb
 from api.tg_bot.database import check_admin
-
+from PIL import Image
 
 
 admin_private = Router()
@@ -25,6 +25,7 @@ admin_private = Router()
 @admin_private.message(Command('admin'))
 async def admin_panel(message: Message):
     ch = await check_admin(message.from_user.id)
+    print(message)
     if ch:
         await message.answer('🔒 Админ-панель', reply_markup=kb.admin_panel())
     else:
@@ -334,12 +335,15 @@ async def save_photo(message: Message, state: FSMContext, next_state: State, nex
         file_id = photo.file_id
         file_info = await message.bot.get_file(file_id)
         file_path = file_info.file_path
-        file_name = f"static/media/halls/{file_id}.jpg"
+        file_name = f"static/media/halls/{file_id}.webp"
 
-        async with aiofiles.open(file_name, 'wb') as out_file:
-            file = await message.bot.download_file(file_path)
-            await out_file.write(file.read())
+        # Скачиваем фото
+        file = await message.bot.download_file(file_path)
 
+        # Конвертируем фото в формат webp
+        with Image.open(file) as img:
+            img.save(file_name, format='webp')
+            
         data = await state.get_data()
         photos = data.get('p_photos', [])
         photos.append(file_name)
@@ -398,7 +402,6 @@ async def add_hall_price(message: Message, state: FSMContext):
         hall_description = data['p_desc']
         hall_capacity = data['p_capacity']
         hall_photos = ",".join(data['p_photos'])  # Фото сохранены в строке, разделенной запятыми
-        print(hall_photos)
         # Создание объекта зала
         hall = await sync_to_async(Halls.objects.create)(
             name=hall_name,
@@ -424,6 +427,11 @@ async def admin_panel(message: Message):
 async def come_out_menu(callback: CallbackQuery):
     await callback.message.edit_text('🔒 Админ-панель', reply_markup=kb.admin_panel())
 
+@admin_private.callback_query(F.data == 'delete_smth')
+async def delete_smth(callback: CallbackQuery, state: FSMContext):
+    await callback.answer()
+    await callback.message.answer('Выбирете категорию', reply_markup=kb.delete_categories())
+
 @admin_private.callback_query(F.data == 'add_service')
 async def add_service(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
@@ -441,11 +449,15 @@ async def save_photo2(message: Message, state: FSMContext, next_state: State, ne
         file_id = photo.file_id
         file_info = await message.bot.get_file(file_id)
         file_path = file_info.file_path
-        file_name = f"static/media/foods/{file_id}.jpg"
+        file_name = f"static/media/foods/{file_id}.webp"
 
-        async with aiofiles.open(file_name, 'wb') as out_file:
-            file = await message.bot.download_file(file_path)
-            await out_file.write(file.read())
+        # Скачиваем фото
+        file = await message.bot.download_file(file_path)
+
+        # Конвертируем фото в формат webp
+        with Image.open(file) as img:
+            img.save(file_name, format='webp')
+            
 
         await state.update_data(s_photo=file_name)
 
@@ -478,10 +490,17 @@ async def add_type1(message: Message, state: FSMContext):
 
 @admin_private.message(Admin.s_photo, F.photo)
 async def process_s_photo(message: Message, state: FSMContext):
-    await save_photo2(message, state, Admin.s_desc, 'Введите описание позиции')
+    data = await state.get_data()
+    type_for = data['type_for']
+    if type_for == 1:
+        await save_photo2(message, state, Admin.s_desc, 'Введите описание позиции')
+    elif type_for == 2:
+        await save_photo3(message, state, Admin.s_desc, 'Введите описание позиции')
+    elif type_for == 3:
+        await save_photo4(message, state, Admin.s_desc, 'Введите описание позиции')
 
 @admin_private.message(Admin.s_photo, F.text)
-async def process_s_photo(message: Message, state: FSMContext):
+async def process_s_photo_text(message: Message, state: FSMContext):
     if message.text == '↩️ Вернуться':
         await message.answer('Вы отменили действие', reply_markup=ReplyKeyboardRemove())
         await message.answer('Админ панель', reply_markup=kb.admin_panel())
@@ -498,11 +517,17 @@ async def process_s_desc(message: Message, state: FSMContext):
         await message.answer('Админ панель', reply_markup=kb.admin_panel())
         await state.clear()
     else:
-        await state.update_data(s_desc=message.text)
-        await state.set_state(Admin.s_weight)
-        await message.answer('Введите вес товара или другой параметр\n'
-                            '\n'
-                            'Например, 100 мл. или 10 гр.', reply_markup=kb.offer_cancel())
+        data = await state.get_data()
+        type_for = data['type_for']
+        if type_for == 2:
+            await state.set_state(Admin.s_price)
+            await message.answer('Введите стоимость (только число)', reply_markup=kb.offer_cancel())
+        else:
+            await state.update_data(s_desc=message.text)
+            await state.set_state(Admin.s_weight)
+            await message.answer('Введите вес товара или другой параметр\n'
+                                '\n'
+                                'Например, 100 мл. или 10 гр.', reply_markup=kb.offer_cancel())
 
 @admin_private.message(Admin.s_weight)
 async def process_s_weight(message: Message, state: FSMContext):
@@ -563,8 +588,121 @@ async def process_s_price(message: Message, state: FSMContext):
         compounds = data.get('s_compound')
         status = Foods.StatusEnum.EXISTS
         price = data.get('s_price')
-        weight = weight.replace("мл")
         # Сохраняем объект в базу данных асинхронно
         await save_food(photo, weight, name, kitchen, compounds, status, price)
         await message.answer('✅ Позиция успешно добавлена', reply_markup=kb.admin_panel())
         await state.clear()
+
+
+
+
+# Функция для сохранения фото и перехода к следующему состоянию
+async def save_photo3(message: Message, state: FSMContext, next_state: State, next_prompt: str):
+    if next_prompt == '↩️ Вернуться':
+        state.clear()
+        await state.set_state(Admin.p_name)
+        await message.answer('Введите название зала', reply_markup=kb.offer_cancel())
+    else:
+        photo = message.photo[-1]
+        file_id = photo.file_id
+        file_info = await message.bot.get_file(file_id)
+        file_path = file_info.file_path
+        file_name = f"static/media/services/{file_id}.webp"
+
+        # Скачиваем фото
+        file = await message.bot.download_file(file_path)
+
+        # Конвертируем фото в формат webp
+        with Image.open(file) as img:
+            img.save(file_name, format='webp')
+            
+
+        await state.update_data(s_photo=file_name)
+
+        await state.set_state(next_state)
+        await message.answer(next_prompt, reply_markup=kb.offer_cancel())
+
+
+@admin_private.callback_query(F.data == 'add_services')
+async def add_services(callback: CallbackQuery, state: FSMContext):
+    await callback.answer()
+    await state.set_state(Admin.s_type2)
+
+    await callback.message.answer('Введите название позиции', reply_markup=kb.offer_cancel())
+
+
+@admin_private.message(Admin.s_type2)
+async def add_type2(message: Message, state: FSMContext):
+    user_message = message.text
+    if message.text == '↩️ Вернуться':
+        await message.answer('Вы отменили действие', reply_markup=ReplyKeyboardRemove())
+        await message.answer('Админ панель', reply_markup=kb.admin_panel())
+        await state.clear()
+    else:
+        await state.update_data(type_for=2)
+        await state.update_data(s_name=message.text)
+        await state.set_state(Admin.s_photo)
+        await message.answer('Отправьте фото позиции', reply_markup=kb.offer_cancel())
+
+
+
+
+@admin_private.callback_query(F.data == 'add_goods')
+async def add_goods(callback: CallbackQuery, state: FSMContext):
+    await callback.answer()
+    await state.set_state(Admin.s_type3)
+
+    await callback.message.answer('Введите название позиции', reply_markup=kb.offer_cancel())
+
+
+@admin_private.message(Admin.s_type3)
+async def add_type3(message: Message, state: FSMContext):
+    user_message = message.text
+    if message.text == '↩️ Вернуться':
+        await message.answer('Вы отменили действие', reply_markup=ReplyKeyboardRemove())
+        await message.answer('Админ панель', reply_markup=kb.admin_panel())
+        await state.clear()
+    else:
+        await state.update_data(type_for=3)
+        await state.update_data(s_name=message.text)
+        await state.set_state(Admin.s_photo)
+        await message.answer('Отправьте фото позиции', reply_markup=kb.offer_cancel())
+
+
+
+async def save_photo4(message: Message, state: FSMContext, next_state: State, next_prompt: str):
+    if next_prompt == '↩️ Вернуться':
+        state.clear()
+        await state.set_state(Admin.p_name)
+        await message.answer('Введите название зала', reply_markup=kb.offer_cancel())
+    else:
+        photo = message.photo[-1]
+        file_id = photo.file_id
+        file_info = await message.bot.get_file(file_id)
+        file_path = file_info.file_path
+        file_name = f"static/media/goods/{file_id}.webp"
+
+        # Скачиваем фото
+        file = await message.bot.download_file(file_path)
+
+        # Конвертируем фото в формат webp
+        with Image.open(file) as img:
+            img.save(file_name, format='webp')
+            
+
+        await state.update_data(s_photo=file_name)
+
+        await state.set_state(next_state)
+        await message.answer(next_prompt, reply_markup=kb.offer_cancel())
+
+
+
+
+
+@admin_private.callback_query(F.data == 'add_foods')
+async def add_foods(callback: CallbackQuery, state: FSMContext):
+    await callback.answer()
+    await state.set_state(Admin.s_type1)
+
+    await callback.message.answer('Введите название позиции', reply_markup=kb.offer_cancel())
+

@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import User, Halls, Foods, Booked, Services, Goods, SMS, Cart, CartFood, CartService, CartGoods
+from .models import (User, Halls, Foods, Booked, Services, Goods, SMS, 
+Cart, CartFood, CartService, CartGoods,WebAppData)
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -56,6 +57,11 @@ class CartGoodsSerializer(serializers.ModelSerializer):
         model = CartGoods
         fields = '__all__'
 
+class WebAppDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WebAppData
+        fields = '__all__'
+        
 class CartSerializer(serializers.ModelSerializer):
     foods = CartFoodSerializer(many=True, read_only=True)
     services = CartServiceSerializer(many=True, read_only=True)

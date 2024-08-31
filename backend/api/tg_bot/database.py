@@ -1,5 +1,5 @@
 from asgiref.sync import sync_to_async
-from api.models import User, Admins, Booked, Halls, Foods, Goods, Services, Notify
+from api.models import User, Admins, Booked, Halls, Foods, Goods, Services, Notify,WebAppData
 from datetime import timedelta
 from django.utils import timezone
 from django.db.models import Count
@@ -13,6 +13,16 @@ def add_user(user_id):
         return True
 
     return False
+@sync_to_async
+def add_user_data(user_id, photo, username, first_name):
+    if not User.objects.filter(tg_id=user_id).exists():
+        return User.objects.create(
+            tg_id=user_id,
+            photo=photo,
+            tg_username=username,
+            name=first_name
+        )
+    return False
 
 @sync_to_async
 def get_users():
@@ -25,6 +35,28 @@ def get_msgs():
 
     queryset = Notify.objects.all().values('tg_id','msg')
     return list(queryset)
+@sync_to_async
+def order_notify(tg_id,text):
+    return Notify.objects.create(tg_id=tg_id,msg=text)
+
+@sync_to_async
+def get_web_data():
+    queryset = WebAppData.objects.filter(is_viewed=False).values('id', 'order_data')
+    return list(queryset)
+    
+@sync_to_async
+def get_web_data_all(data_id):
+    queryset = WebAppData.objects.filter(id=data_id).values('id', 'order_data')
+    return list(queryset)
+
+@sync_to_async
+def view_web_data(data_id):
+    order = WebAppData.objects.get(id=data_id)
+    order.is_viewed = True
+    order.save()
+
+    return True    
+
 
 @sync_to_async
 def save_food(photo, weight, name, kitchen, compounds, status, price):

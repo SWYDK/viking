@@ -66,6 +66,8 @@ class Foods(models.Model):
     class StatusEnum(models.TextChoices):
         EXISTS = 'EX', _('Exists')
         EMPTY = 'EM', _('Empty')
+        PRESENT = 'PR', _('Present')
+
         
     photo = models.ImageField('Фото', upload_to='static/media/foods/')
     weight = models.IntegerField('Масса еды', blank=True )
@@ -107,10 +109,8 @@ class Goods(models.Model):
         EMPTY = 'EM', _('Empty')
         
     photo = models.ImageField('Фото', upload_to='static/media/goods/')
-    weight = models.CharField('Объем/Масса',null=True,  blank=True )
+    weight = models.CharField('Объем/Масса',null=True, max_length=300, blank=True )
     name = models.CharField('Имя', max_length=300, blank=True)
-    
-
     status = models.CharField('Статус', choices=StatusEnum.choices, default=StatusEnum.EXISTS, max_length=250)
     price = models.IntegerField('Цена в руб', blank=True)
 
@@ -167,8 +167,8 @@ class Cart(models.Model):
 
 class Booked(models.Model):
     
-    
     hall = models.ForeignKey(Halls, on_delete=models.CASCADE)
+    
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     create_date = models.DateTimeField('Время создания брони', auto_now=True ,null=True)
     book_time = models.DateTimeField('Время бронирования', null=False)
@@ -223,3 +223,32 @@ class Notify(models.Model):
     class Meta:
         verbose_name = 'Оповещение'
         verbose_name_plural = 'Оповещения'
+
+class Presents(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    present = models.ForeignKey(Foods, on_delete=models.CASCADE)
+
+
+
+    list_per_page = 500
+
+    def __str__(self):
+        return f'{self.tg_id} - {self.msg}'
+
+    class Meta:
+        verbose_name = 'Подарок'
+        verbose_name_plural = 'Подарки'
+
+class WebAppData(models.Model):
+    
+    order_data = models.JSONField()
+    is_viewed = models.BooleanField(default=False)
+
+    list_per_page = 500
+
+    def __str__(self):
+        return f'Данные WebApp'
+
+    class Meta:
+        verbose_name = 'Данные'
+        verbose_name_plural = 'Данные'
