@@ -61,6 +61,10 @@ REST_FRAMEWORK = {
 }
 CORS_ALLOWED_ORIGINS = [
     'https://pizzafresca.ru',
+    'http://localhost:3000',
+
+    'https://ct6n17h4-3000.euw.devtunnels.ms',
+    'https://viking-mini-app.vercel.app',
 
     # другие источники, если необходимо
 ]
