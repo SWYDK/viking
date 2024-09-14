@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:14
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: viking
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+
+  django:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - postgres
+    environment:
+      DJANGO_SETTINGS_MODULE: backend.settings
+      DATABASE_URL: postgres://myuser:mypassword@postgres:5432/viking
+    ports:
+      - "8000:8000"
+
+  react:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "8080:80"
+    depends_on:
+      - django
+      - react
+
+volumes:
+  postgres_data:

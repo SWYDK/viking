@@ -1,0 +1,23 @@
+{
+  "files": {
+    "main.css": "/static/css/main.17e62b1a.css",
+    "main.js": "/static/js/main.26de305f.js",
+    "static/js/453.68693753.chunk.js": "/static/js/453.68693753.chunk.js",
+    "static/media/MuseoSansCyrl-500.eot": "/static/media/MuseoSansCyrl-500.f602729c35ef07caf575.eot",
+    "static/media/MuseoSansCyrl-500.ttf": "/static/media/MuseoSansCyrl-500.4a7ab6cebbb2ceac67d4.ttf",
+    "static/media/MuseoSansCyrl-700.eot": "/static/media/MuseoSansCyrl-700.c2281bff40e9f06884d7.eot",
+    "static/media/MuseoSansCyrl-700.ttf": "/static/media/MuseoSansCyrl-700.d517f62e41d9a4dab324.ttf",
+    "static/media/content.png": "/static/media/content.9db08d127e582168a75a.png",
+    "static/media/BG.webp": "/static/media/BG.cd9ab8614089ac96050f.webp",
+    "static/media/MuseoSansCyrl-500.woff": "/static/media/MuseoSansCyrl-500.8cd656174445150d19cc.woff",
+    "static/media/MuseoSansCyrl-700.woff": "/static/media/MuseoSansCyrl-700.0d5cb4ec8ac2a9f30484.woff",
+    "index.html": "/index.html",
+    "main.17e62b1a.css.map": "/static/css/main.17e62b1a.css.map",
+    "main.26de305f.js.map": "/static/js/main.26de305f.js.map",
+    "453.68693753.chunk.js.map": "/static/js/453.68693753.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.17e62b1a.css",
+    "static/js/main.26de305f.js"
+  ]
+}
