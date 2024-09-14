@@ -23,6 +23,14 @@ services:
       DATABASE_URL: postgres://myuser:mypassword@postgres:5432/viking
     ports:
       - "8000:8000"
+  telegram_bot:
+    build:
+      context: ./telegram_bot
+      dockerfile: Dockerfile
+    container_name: telegram-bot-container
+    environment:
+      - TELEGRAM_TOKEN="6565281195:AAGQIFNAgzZJQDU646n5dKvpvORJPl_UlMs"
+    restart: always
 
   react:
     build:

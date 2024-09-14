@@ -20,7 +20,7 @@ from api.tg_bot.track_orders import getwebdata
 
 load_dotenv()
 
-bot = Bot(getenv('bot_token'), default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+bot = Bot('"6565281195:AAGQIFNAgzZJQDU646n5dKvpvORJPl_UlMs', default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
 
 
